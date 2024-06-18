@@ -1,0 +1,36 @@
+{
+  "version": "3",
+  "packages": {
+    "specifiers": {
+      "jsr:@hono/hono": "jsr:@hono/hono@4.4.5",
+      "jsr:@std/assert@^0.225.1": "jsr:@std/assert@0.225.1",
+      "jsr:@std/cli": "jsr:@std/cli@0.224.1"
+    },
+    "jsr": {
+      "@hono/hono@4.4.5": {
+        "integrity": "8b0f005253251e7e3dcd5c1d54cd236b24db9634e5483815fad67aca2fb2eaf2"
+      },
+      "@std/assert@0.225.1": {
+        "integrity": "7342fa32a6d82c2c7c98ffea566baa9a892d04b22815b9fcf62cedeee5764f9c"
+      },
+      "@std/cli@0.224.1": {
+        "integrity": "f631d47fc9802541399d00a1f77ac62ac709e7465b6bc52547caa358c486b36e",
+        "dependencies": [
+          "jsr:@std/assert@^0.225.1"
+        ]
+      }
+    }
+  },
+  "redirects": {
+    "https://esm.town/v/std/API_URL": "https://esm.town/v/std/API_URL?v=5"
+  },
+  "remote": {
+    "https://esm.town/v/pomdtr/fetchAPI?v=4": "6fbc9f5610592634dc6df318e7a8516f48953d6611cd65580bc00935aa3019e5",
+    "https://esm.town/v/std/API_URL?v=5": "46109f905a50e32281d3ffbe7b9c8209a778290c5274d83d131fba2d26c4974d"
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@hono/hono"
+    ]
+  }
+}
