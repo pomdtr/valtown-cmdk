@@ -1,22 +1,35 @@
 export type List = {
   type: "list";
+  title: string;
   dynamic?: boolean;
   isShowingDetail?: boolean;
   items: ListItem[];
 };
 
 export type ListItem = {
+  title: string;
   icon?: string;
   id?: string;
   detail?: {
     markdown: string;
+    metadata?: MetadataItem[];
   };
-  title: string;
-  actions?: ActionItem[];
+  actions?: Action[];
 };
 
 export type Form = {
   type: "form";
+  title: string;
+  onSubmit:
+    | {
+        type: "push";
+        url?: string;
+      }
+    | {
+        type: "run";
+        url?: string;
+        onSuccess?: "reload" | "pop";
+      };
   items: FormItem[];
 };
 
@@ -62,39 +75,53 @@ type SelectItem = {
 
 export type FormItem = TextField | Checkbox | TextArea | Select | File;
 
-export type ActionItem = {
+export type Detail = {
+  title: string;
+  metadata?: MetadataItem[];
+  type: "detail";
+  markdown: string;
+  actions?: Action[];
+};
+
+export type MetadataLink = {
+  type: "link";
+  url: string;
+  title: string;
+  text: string;
+};
+
+export type MetadataSeparator = {
+  type: "separator";
+};
+
+export type MetadataLabel = {
+  type: "label";
+  title: string;
+  text: string;
+};
+
+export type MetadataItem = MetadataLink | MetadataLabel | MetadataSeparator;
+
+export type Action = {
   title: string;
   icon?: string;
   shortcut?: {
     modifiers: string[];
     key: string;
   };
-} & Action;
-
-export type Detail = {
-  type: "detail";
-  markdown: string;
-  actions: ActionItem[];
+  onAction: Command;
 };
 
 export type PushAction = {
   type: "push";
-  url: string;
+  page: string;
 };
 
-export type PopAction = {
-  type: "pop";
-  reload?: boolean;
-};
-
-export type RunAction = {
+export type FetchAction = {
   type: "run";
-  url: string;
-  data?: Record<string, any>;
-};
-
-export type ReloadAction = {
-  type: "reload";
+  command: string;
+  data?: Record<string, string>;
+  onSuccess?: "reload" | "pop";
 };
 
 export type CopyAction = {
@@ -107,13 +134,5 @@ export type OpenAction = {
   url: string;
 };
 
-export type Action =
-  | OpenAction
-  | CopyAction
-  | RunAction
-  | PushAction
-  | ReloadAction
-  | PopAction;
-export type View = {
-  title: string;
-} & (List | Detail | Form);
+export type Command = OpenAction | CopyAction | FetchAction | PushAction;
+export type View = List | Detail | Form;

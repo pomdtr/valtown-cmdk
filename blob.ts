@@ -4,7 +4,7 @@ import * as cmdk from "./cmdk.ts";
 
 const app = new Hono();
 
-app.get("/list", async (c) => {
+app.get("/blobs", async (c) => {
   const resp = await fetchAPI("/v1/blob", {
     token: c.get("token"),
   });
@@ -20,28 +20,75 @@ app.get("/list", async (c) => {
 
   return c.json({
     type: "list",
-    items: blobs.map((blob) => ({
-      title: blob.key,
-      icon: "https://api.iconify.design/codicon/file.svg",
-      actions: [
-        {
-          title: "View Blob Content",
-          icon: "https://api.iconify.design/codicon/eye.svg",
-          type: "push",
-          url: `/blob/view/${encodeURIComponent(blob.key)}`,
-        },
-        {
-          title: "Delete Blob",
-          type: "run",
-          icon: "https://api.iconify.design/codicon/trash.svg",
-          url: `/blob/delete/${blob.key}?reload=true`,
-        },
-      ],
-    })),
+    title: "Blobs | Val Town",
+    items: blobs.map(
+      (blob) =>
+        ({
+          title: blob.key,
+          icon: "https://api.iconify.design/codicon/file.svg",
+          actions: [
+            {
+              title: "View Blob Content",
+              icon: "https://api.iconify.design/codicon/eye.svg",
+              onAction: {
+                type: "push",
+                page: `/blob/${encodeURIComponent(blob.key)}`,
+              },
+            },
+            {
+              title: "Delete Blob",
+              icon: "https://api.iconify.design/codicon/trash.svg",
+              onAction: {
+                type: "run",
+                command: `/blob/${blob.key}/delete`,
+                onSuccess: "reload",
+              },
+            },
+            {
+              title: "Create Blob",
+              icon: "https://api.iconify.design/codicon/add.svg",
+              onAction: {
+                type: "push",
+                page: `/blobs/new?pop=true`,
+              },
+            },
+          ],
+        } satisfies cmdk.ListItem)
+    ),
   } satisfies cmdk.List);
 });
 
-app.get("/view/:key", async (c) => {
+app.get("/blobs/new", async (c) => {
+  if (c.req.method === "POST") {
+    await fetchAPI("/v1/blob", {
+      method: "POST",
+      body: await c.req.text(),
+      token: c.get("token"),
+    });
+  }
+
+  return c.json({
+    type: "form",
+    onSubmit: {
+      type: "run",
+    },
+    title: `New Blob | Val Town`,
+    items: [
+      {
+        type: "textfield",
+        title: "Key",
+        name: "key",
+      },
+      {
+        type: "textarea",
+        title: "Content",
+        name: "content",
+      },
+    ],
+  } satisfies cmdk.Form);
+});
+
+app.get("/blob/:key", async (c) => {
   const key = c.req.param("key");
   const extension = key.split(".").slice(1).pop();
 
@@ -55,34 +102,42 @@ app.get("/view/:key", async (c) => {
   const content = await resp.text();
   return c.json({
     type: "detail",
+    title: `Blob: ${key} | Val Town`,
     markdown: ["```" + extension || "", content, "```"].join("\n"),
     actions: [
       {
         title: "Copy Blob",
         icon: "https://api.iconify.design/codicon/clippy.svg",
-        type: "copy",
-        text: content,
+        onAction: {
+          type: "copy",
+          text: content,
+        },
       },
       {
         title: "Edit Blob",
         icon: "https://api.iconify.design/codicon/edit.svg",
-        type: "push",
-        url: `/blob/edit/${key}`,
+        onAction: {
+          type: "push",
+          page: `/blob/edit/${key}`,
+        },
       },
       {
         title: "Delete Blob",
         icon: "https://api.iconify.design/codicon/trash.svg",
-        type: "run",
-        url: `/blob/delete/${key}?pop=true`,
+        onAction: {
+          type: "run",
+          command: `/blob/delete/${key}`,
+          onSuccess: "pop",
+        },
       },
     ],
-  });
+  } satisfies cmdk.Detail);
 });
 
-app.all("/blob/edit/:key", async (c) => {
+app.all("/blob/:key/edit", async (c) => {
   const key = c.req.param("key");
   if (c.req.method === "POST") {
-    const { key, content } = await c.req.json();
+    const { content } = await c.req.json();
 
     const resp = await fetchAPI(`/v1/blob/${encodeURIComponent(key)}`, {
       method: "POST",
@@ -92,10 +147,6 @@ app.all("/blob/edit/:key", async (c) => {
 
     if (!resp.ok) {
       return resp;
-    }
-
-    if (c.req.query("pop")) {
-      return c.json({ type: "pop" });
     }
 
     return c.json({
@@ -110,15 +161,13 @@ app.all("/blob/edit/:key", async (c) => {
 
   return c.json({
     type: "form",
+    onSubmit: {
+      type: "run",
+    },
+    title: `Edit Blob: ${key} | Val Town`,
     items: [
       {
-        type: "textfield",
-        title: "Key",
-        name: "key",
-        value: key,
-      },
-      {
-        type: "textfield",
+        type: "textarea",
         title: "Content",
         name: "content",
         value: await blob.text(),
@@ -127,7 +176,7 @@ app.all("/blob/edit/:key", async (c) => {
   } satisfies cmdk.Form);
 });
 
-app.post("/delete/:key", async (c) => {
+app.post("/blob/:key/delete", async (c) => {
   const key = c.req.param("key");
   const resp = await fetchAPI(`/v1/blob/${encodeURIComponent(key)}`, {
     method: "DELETE",
@@ -136,24 +185,6 @@ app.post("/delete/:key", async (c) => {
 
   if (!resp.ok) {
     return resp;
-  }
-
-  if (c.req.query("reload")) {
-    return c.json(
-      { type: "reload" },
-      {
-        status: 200,
-      }
-    );
-  }
-
-  if (c.req.query("pop")) {
-    return c.json(
-      { type: "pop" },
-      {
-        status: 200,
-      }
-    );
   }
 
   return new Response(null, {

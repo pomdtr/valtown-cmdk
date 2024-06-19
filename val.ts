@@ -4,9 +4,21 @@ import { fetchAPI } from "val-town-api";
 
 const app = new Hono();
 
-app.get("/list", async (c) => {
-  let userID = c.req.query("user");
-  if (!userID) {
+app.get("/vals", async (c) => {
+  const username = c.req.query("user");
+  let userID: string;
+  if (username) {
+    const resp = await fetchAPI(`/v1/alias/${username}`, {
+      token: c.get("token"),
+    });
+
+    if (!resp.ok) {
+      return resp;
+    }
+
+    const user = await resp.json();
+    userID = user.id;
+  } else {
     const resp = await fetchAPI("/v1/me", {
       token: c.get("token"),
     });
@@ -18,6 +30,7 @@ app.get("/list", async (c) => {
     const me = await resp.json();
     userID = me.id;
   }
+
   const resp = await fetchAPI(`/v1/users/${userID}/vals`, {
     token: c.get("token"),
     paginate: true,
@@ -32,46 +45,76 @@ app.get("/list", async (c) => {
       id: string;
       name: string;
       code: string;
-      author: { username: string };
+      author: { username: string; id: string };
     }[];
   };
 
   return c.json({
     type: "list",
+    title: "Vals | Val Town",
     isShowingDetail: true,
-    items: vals.map((val) => ({
-      title: `${val.author.username}/${val.name}`,
-      icon: "https://api.iconify.design/codicon/code.svg",
-      detail: {
-        markdown: ["```tsx", val.code, "```"].join("\n"),
-      },
-      actions: [
-        {
-          title: "Open Val URL",
-          icon: "https://api.iconify.design/codicon/globe.svg",
-          type: "open",
-          url: `https://www.val.town/v/${val.author.username}/${val.name}`,
-        },
-        {
-          title: "Copy Val ID",
-          icon: "https://api.iconify.design/codicon/clippy.svg",
-          type: "copy",
-          text: val.id,
-        },
-        {
-          title: "View Readme",
-          icon: "https://api.iconify.design/codicon/arrow-right.svg",
-          type: "push",
-          url: `/val/readme/${val.id}`,
-        },
-        {
-          title: "Delete",
-          icon: "https://api.iconify.design/codicon/trash.svg",
-          type: "run",
-          url: `/val/delete/${val.id}?reload=true`,
-        },
-      ],
-    })),
+    items: vals.map(
+      (val) =>
+        ({
+          title: `${val.author.username}/${val.name}`,
+          icon: "https://api.iconify.design/codicon/code.svg",
+          detail: {
+            markdown: ["```tsx", val.code, "```"].join("\n"),
+            metadata: [
+              { type: "label", title: "ID", text: val.id },
+              {
+                type: "link",
+                url: `https://www.val.town/v/${val.author.username}/${val.name}`,
+                text: `@${val.author.username}/${val.name}`,
+                title: "Link",
+              },
+            ],
+          },
+          actions: [
+            {
+              title: "Open Val URL",
+              icon: "https://api.iconify.design/codicon/globe.svg",
+              onAction: {
+                type: "open",
+                url: `https://www.val.town/v/${val.author.username}/${val.name}`,
+              },
+            },
+            {
+              title: "Copy Val ID",
+              icon: "https://api.iconify.design/codicon/clippy.svg",
+              onAction: {
+                type: "copy",
+                text: val.id,
+              },
+            },
+            {
+              title: "View User",
+              icon: "https://api.iconify.design/codicon/person.svg",
+              onAction: {
+                type: "push",
+                page: `/user/${val.author.id}`,
+              },
+            },
+            {
+              title: "View Readme",
+              icon: "https://api.iconify.design/codicon/arrow-right.svg",
+              onAction: {
+                type: "push",
+                page: `/val/readme/${val.id}`,
+              },
+            },
+            {
+              title: "Delete",
+              icon: "https://api.iconify.design/codicon/trash.svg",
+              onAction: {
+                type: "run",
+                command: `/val/delete/${val.id}`,
+                onSuccess: "reload",
+              },
+            },
+          ],
+        } satisfies cmdk.ListItem)
+    ),
   } satisfies cmdk.List);
 });
 
@@ -88,12 +131,21 @@ app.get("/readme/:id", async (c) => {
   const val = await resp.json();
   return c.json({
     type: "detail",
-    actions: [{ title: "Copy Val Readme", type: "copy", text: val.readme }],
+    title: `${val.author.username}/${val.name} Readme`,
+    actions: [
+      {
+        title: "Copy Val Readme",
+        onAction: {
+          type: "copy",
+          text: val.readme,
+        },
+      },
+    ],
     markdown: val.readme,
-  });
+  } satisfies cmdk.Detail);
 });
 
-app.all("/edit/:id", async (c) => {
+app.all("/val/:id/edit", async (c) => {
   const valID = c.req.param("id");
   if (c.req.method == "POST") {
     const { name, code, privacy, type } = await c.req.json();
@@ -107,8 +159,8 @@ app.all("/edit/:id", async (c) => {
     return c.json(
       {
         type: "push",
-        url: `/val/view/${valID}`,
-      },
+        page: `/val/view/${valID}`,
+      } satisfies cmdk.PushAction,
       {
         status: 200,
       }
@@ -117,13 +169,16 @@ app.all("/edit/:id", async (c) => {
 
   return c.json({
     type: "form",
-    title: "Edit Val",
+    title: "Edit Val | Val Town",
+    onSubmit: {
+      type: "run",
+    },
     items: [
       {
         name: "name",
         title: "Name",
         required: true,
-        type: "text",
+        type: "textfield",
       },
       {
         name: "code",
@@ -135,9 +190,9 @@ app.all("/edit/:id", async (c) => {
         name: "privacy",
         title: "Privacy",
         required: true,
-        type: "select",
+        type: "dropdown",
         value: "private",
-        options: [
+        items: [
           { value: "private", title: "Private" },
           { value: "unlisted", title: "Unlisted" },
           { value: "public", title: "Public" },
@@ -147,19 +202,19 @@ app.all("/edit/:id", async (c) => {
         name: "type",
         title: "Type",
         required: true,
-        type: "select",
+        type: "dropdown",
         value: "http",
-        options: [
+        items: [
           { value: "http", title: "HTTP" },
           { value: "script", title: "Script" },
           { value: "email", title: "Email" },
         ],
       },
     ],
-  });
+  } satisfies cmdk.Form);
 });
 
-app.all("/create", async (c) => {
+app.all("/vals/new", async (c) => {
   if (c.req.method == "POST") {
     const { name, code, privacy, type } = await c.req.json();
 
@@ -190,13 +245,16 @@ app.all("/create", async (c) => {
 
   return c.json({
     type: "form",
-    title: "Create Val",
+    title: "Create Val | Val Town",
+    onSubmit: {
+      type: "run",
+    },
     items: [
       {
         name: "name",
         title: "Name",
         required: true,
-        type: "text",
+        type: "textfield",
       },
       {
         name: "code",
@@ -208,9 +266,9 @@ app.all("/create", async (c) => {
         name: "privacy",
         title: "Privacy",
         required: true,
-        type: "select",
-        defaultValue: "private",
-        options: [
+        type: "dropdown",
+        value: "private",
+        items: [
           { value: "private", title: "Private" },
           { value: "unlisted", title: "Unlisted" },
           { value: "public", title: "Public" },
@@ -220,16 +278,29 @@ app.all("/create", async (c) => {
         name: "type",
         title: "Type",
         required: true,
-        type: "select",
-        defaultValue: "http",
-        options: [
+        type: "dropdown",
+        value: "http",
+        items: [
           { value: "http", title: "HTTP" },
           { value: "script", title: "Script" },
           { value: "email", title: "Email" },
         ],
       },
     ],
+  } satisfies cmdk.Form);
+});
+
+app.get("/v/:author/:name", async (c) => {
+  const { author, name } = c.req.param();
+  const resp = await fetchAPI(`/v1/alias/${author}/${name}`, {
+    token: c.get("token"),
   });
+  if (!resp.ok) {
+    return resp;
+  }
+  const val = await resp.json();
+
+  return c.redirect(`/val/${val.id}`);
 });
 
 app.post("/delete/:id", async (c) => {
@@ -241,15 +312,6 @@ app.post("/delete/:id", async (c) => {
 
   if (!resp.ok) {
     return resp;
-  }
-
-  if (c.req.query("reload")) {
-    return c.json(
-      { type: "reload" },
-      {
-        status: 200,
-      }
-    );
   }
 
   return new Response(null, {

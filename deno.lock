@@ -4,7 +4,8 @@
     "specifiers": {
       "jsr:@hono/hono": "jsr:@hono/hono@4.4.5",
       "jsr:@std/assert@^0.225.1": "jsr:@std/assert@0.225.1",
-      "jsr:@std/cli": "jsr:@std/cli@0.224.1"
+      "jsr:@std/cli": "jsr:@std/cli@0.224.1",
+      "npm:lodash-es@4.17.21": "npm:lodash-es@4.17.21"
     },
     "jsr": {
       "@hono/hono@4.4.5": {
@@ -19,13 +20,21 @@
           "jsr:@std/assert@^0.225.1"
         ]
       }
+    },
+    "npm": {
+      "lodash-es@4.17.21": {
+        "integrity": "sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==",
+        "dependencies": {}
+      }
     }
   },
   "redirects": {
+    "https://esm.town/v/pomdtr/sql": "https://esm.town/v/pomdtr/sql?v=13",
     "https://esm.town/v/std/API_URL": "https://esm.town/v/std/API_URL?v=5"
   },
   "remote": {
     "https://esm.town/v/pomdtr/fetchAPI?v=4": "6fbc9f5610592634dc6df318e7a8516f48953d6611cd65580bc00935aa3019e5",
+    "https://esm.town/v/pomdtr/sql?v=13": "6eb9e76013586a1be59ad2fcb915a8c36120ab9f566fddfa10ab3c39ebc6dc54",
     "https://esm.town/v/std/API_URL?v=5": "46109f905a50e32281d3ffbe7b9c8209a778290c5274d83d131fba2d26c4974d"
   },
   "workspace": {
