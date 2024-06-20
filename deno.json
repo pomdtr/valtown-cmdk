@@ -1,6 +1,10 @@
 {
+    "name": "@pomdtr/val-town-cmdk",
+    "version": "0.0.1",
+    "exports": {
+        ".": "./src/mod.ts"
+    },
     "imports": {
-        "hono": "jsr:@hono/hono",
-        "val-town-api": "https://esm.town/v/pomdtr/fetchAPI?v=4"
+        "hono": "jsr:@hono/hono@4.4.7"
     }
 }

@@ -2,14 +2,14 @@
   "version": "3",
   "packages": {
     "specifiers": {
-      "jsr:@hono/hono": "jsr:@hono/hono@4.4.5",
+      "jsr:@hono/hono@4.4.7": "jsr:@hono/hono@4.4.7",
       "jsr:@std/assert@^0.225.1": "jsr:@std/assert@0.225.1",
       "jsr:@std/cli": "jsr:@std/cli@0.224.1",
       "npm:lodash-es@4.17.21": "npm:lodash-es@4.17.21"
     },
     "jsr": {
-      "@hono/hono@4.4.5": {
-        "integrity": "8b0f005253251e7e3dcd5c1d54cd236b24db9634e5483815fad67aca2fb2eaf2"
+      "@hono/hono@4.4.7": {
+        "integrity": "069f612a089362e59786ea925d19fa834096fe92bf4f4b8dd572c508a3a708aa"
       },
       "@std/assert@0.225.1": {
         "integrity": "7342fa32a6d82c2c7c98ffea566baa9a892d04b22815b9fcf62cedeee5764f9c"
@@ -39,7 +39,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@hono/hono"
+      "jsr:@hono/hono@4.4.7"
     ]
   }
 }

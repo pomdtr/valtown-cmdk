@@ -1,8 +1,9 @@
 import { Hono } from "hono";
-import * as cmdk from "./cmdk.ts";
-import { fetchAPI } from "val-town-api";
+import type * as cmdk from "./cmdk.ts";
+import { fetchAPI } from "./api.ts";
+import type { Variables } from "./mod.ts";
 
-const app = new Hono();
+const app = new Hono<{ Variables: Variables }>();
 
 app.get("/vals", async (c) => {
   const username = c.req.query("user");
@@ -51,6 +52,8 @@ app.get("/vals", async (c) => {
 
   return c.json({
     type: "list",
+    icon: "https://pomdtr-favicon.web.val.run/val-town",
+
     title: "Vals | Val Town",
     isShowingDetail: true,
     items: vals.map(
@@ -131,6 +134,8 @@ app.get("/readme/:id", async (c) => {
   const val = await resp.json();
   return c.json({
     type: "detail",
+    icon: "https://pomdtr-favicon.web.val.run/val-town",
+
     title: `${val.author.username}/${val.name} Readme`,
     actions: [
       {
@@ -169,6 +174,7 @@ app.all("/val/:id/edit", async (c) => {
 
   return c.json({
     type: "form",
+    icon: "https://pomdtr-favicon.web.val.run/val-town",
     title: "Edit Val | Val Town",
     onSubmit: {
       type: "run",
@@ -245,6 +251,7 @@ app.all("/vals/new", async (c) => {
 
   return c.json({
     type: "form",
+    icon: "https://pomdtr-favicon.web.val.run/val-town",
     title: "Create Val | Val Town",
     onSubmit: {
       type: "run",

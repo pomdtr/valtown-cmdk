@@ -1,8 +1,11 @@
 import { Hono } from "hono";
-import { fetchAPI } from "val-town-api";
-import * as cmdk from "./cmdk.ts";
+import { fetchAPI } from "./api.ts";
+import type * as cmdk from "./cmdk.ts";
+import type { Variables } from "./mod.ts";
 
-const app = new Hono();
+const app = new Hono<{
+  Variables: Variables;
+}>();
 
 app.get("/blobs", async (c) => {
   const resp = await fetchAPI("/v1/blob", {
@@ -21,6 +24,8 @@ app.get("/blobs", async (c) => {
   return c.json({
     type: "list",
     title: "Blobs | Val Town",
+    icon: "https://pomdtr-favicon.web.val.run/val-town",
+
     items: blobs.map(
       (blob) =>
         ({
@@ -68,6 +73,8 @@ app.get("/blobs/new", async (c) => {
   }
 
   return c.json({
+    icon: "https://pomdtr-favicon.web.val.run/val-town",
+
     type: "form",
     onSubmit: {
       type: "run",
@@ -101,6 +108,8 @@ app.get("/blob/:key", async (c) => {
 
   const content = await resp.text();
   return c.json({
+    icon: "https://pomdtr-favicon.web.val.run/val-town",
+
     type: "detail",
     title: `Blob: ${key} | Val Town`,
     markdown: ["```" + extension || "", content, "```"].join("\n"),

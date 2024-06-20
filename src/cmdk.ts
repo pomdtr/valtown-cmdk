@@ -1,5 +1,6 @@
 export type List = {
   type: "list";
+  icon?: string;
   title: string;
   dynamic?: boolean;
   isShowingDetail?: boolean;
@@ -8,6 +9,7 @@ export type List = {
 
 export type ListItem = {
   title: string;
+  subtitle?: string;
   icon?: string;
   id?: string;
   detail?: {
@@ -19,6 +21,7 @@ export type ListItem = {
 
 export type Form = {
   type: "form";
+  icon?: string;
   title: string;
   onSubmit:
     | {
@@ -77,6 +80,7 @@ export type FormItem = TextField | Checkbox | TextArea | Select | File;
 
 export type Detail = {
   title: string;
+  icon?: string;
   metadata?: MetadataItem[];
   type: "detail";
   markdown: string;
